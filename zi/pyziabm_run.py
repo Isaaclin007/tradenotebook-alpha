@@ -1,4 +1,4 @@
-from pyziabm.runner import Runner
+from .pyziabm.runner import Runner
 import time
 
 def main(num_mms = 1, mm_maxq = 1, mm_quotes = 5, mm_quote_range = 20, q_provide = 0.5, run_steps = 5000):
@@ -41,4 +41,7 @@ def main(num_mms = 1, mm_maxq = 1, mm_quotes = 5, mm_quote_range = 20, q_provide
     print('Run 2: %.2f minutes' % ((time.time() - start)/60))
     
 if __name__ == "__main__":
-    main()
+    df = main()
+
+    # df.info()
+    query = df.to_json()
