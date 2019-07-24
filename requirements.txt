@@ -1,0 +1,7 @@
+django
+djangorestframework
+django-rest-swagger
+django-rest-auth
+django-cors-headers
+gunicorn
+django-heroku
