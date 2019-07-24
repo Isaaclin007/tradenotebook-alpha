@@ -1,7 +1,7 @@
 from .pyziabm.runner import Runner
 import time
 
-def main(num_mms = 1, mm_maxq = 1, mm_quotes = 5, mm_quote_range = 20, q_provide = 0.5, run_steps = 5000):
+def main(num_mms = 1, mm_maxq = 1, mm_quotes = 5, mm_quote_range = 20, q_provide = 0.5, run_steps = 1000):
 
     start = time.time()
     print(start) 
@@ -33,10 +33,17 @@ def main(num_mms = 1, mm_maxq = 1, mm_quotes = 5, mm_quote_range = 20, q_provide
     market1.make_setup(20)
 
     market1.run_mcs(20)
-            
-    data = market1.mm_profitability_to_df()
     
-    return data 
+    tb = market1.exchange.trade_book_to_df()
+    qtake = market1.qtake_to_df()
+    mmp = market1.mm_profitability_to_df()
+    orders = market1.exchange.order_history_to_df()
+    trades = market1.exchange.trade_book_to_df()
+
+    
+
+    
+    return [tb, qtake, mmp, orders, trades]
 
     print('Run 2: %.2f minutes' % ((time.time() - start)/60))
     
