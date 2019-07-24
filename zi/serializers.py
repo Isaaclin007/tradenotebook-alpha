@@ -10,7 +10,7 @@ class InputSerializer(serializers.ModelSerializer):
 # class InputSerializer(serializers.Serializer):
 #     id = serializers.IntegerField(read_only=True)
 #     model_input = serializers.CharField(max_length = 100)
-#     delivered = serializers.BooleaanField(required=False, default=True)
+#     delivered = serializers.BooleanField(required=False, default=True)
 
 #     def create(self, validated_data):
 #         return Results.objects.create(**validated_data)
