@@ -16,9 +16,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from zi.views import PyView
+from zi.views import PyView, RandomView
+
+from rest_framework_swagger.views import get_swagger_view
+
+schema_view = get_swagger_view(title='Swagger Docs V0')
+
+from rest_framework import routers
+
+router = routers.DefaultRouter()
+router.register(r'data', PyView, 'asadf')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', PyView.as_view())
+    path('api/', include(router.urls)),
+    path('api2/', RandomView.as_view()),
+    path('swagger/', schema_view)
 ]
