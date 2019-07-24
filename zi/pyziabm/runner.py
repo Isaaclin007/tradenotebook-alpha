@@ -117,11 +117,14 @@ class Runner(object):
     def qtake_to_h5(self):
         temp_df = pd.DataFrame({'qt_take': self.q_take, 'lambda_t': self.lambda_t})
         temp_df.to_hdf(self.h5filename, 'qtl', append=True, format='table', complevel=5, complib='blosc')
+
+    def qtake_to_df(self):
+        return pd.DataFrame({'qt_take': self.q_take, 'lambda_t': self.lambda_t})
         
-    def mm_profitability_to_h5(self):
-        for m in self.marketmaker_array:
-            temp_df = pd.DataFrame(m.cash_flow_collector)
-            temp_df.to_hdf(self.h5filename, 'mmp', append=True, format='table', complevel=5, complib='blosc')
+    # def mm_profitability_to_h5(self):
+    #     for m in self.marketmaker_array:
+    #         temp_df = pd.DataFrame(m.cash_flow_collector)
+    #         temp_df.to_hdf(self.h5filename, 'mmp', append=True, format='table', complevel=5, complib='blosc')
     
     def mm_profitability_to_df(self):
         if len(self.marketmaker_array) == 1:
@@ -174,9 +177,9 @@ class Runner(object):
                             trader = self.trader_dict[c['trader']]
                             trader.confirm_trade_local(c)
                         top_of_book = self.exchange.report_top_of_book(current_time)
-            if not np.remainder(current_time, 2000):
-                self.exchange.order_history_to_h5(self.h5filename)
-                self.exchange.sip_to_h5(self.h5filename)
+            # if not np.remainder(current_time, 2000):
+            #     self.exchange.order_history_to_h5(self.h5filename)
+            #     self.exchange.sip_to_h5(self.h5filename)
                 
     def run_mcsPJ(self, prime1):
         top_of_book = self.exchange.report_top_of_book(prime1)
