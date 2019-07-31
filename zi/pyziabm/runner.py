@@ -3,14 +3,16 @@ import time
 import numpy as np
 import pandas as pd
 
-from orderbook import Orderbook
-from traders import Provider, Provider5, Taker, MarketMaker, MarketMaker5, PennyJumper
+from .orderbook import Orderbook
+from .traders import Provider, Provider5, Taker, MarketMaker, MarketMaker5, PennyJumper
 
+random.seed(5)
+np.random.seed(5)
 
 class Runner(object):
     def __init__(self, num_mms=1, mm_maxq=1, mm_quotes=12, mm_quote_range=60, mm_delta=0.025, 
                  num_takers=50, taker_maxq=1, num_providers=38, provider_maxq=1, q_provide=0.5,
-                 alpha=0.0375, mu=0.001, delta=0.025, lambda0=100, wn=0.001, c_lambda=1.0, run_steps=5000,
+                 alpha=0.0375, mu=0.001, delta=0.025, lambda0=100, wn=0.001, c_lambda=1.0, run_steps=500,
                  mpi=5, h5filename='test.h5', alpha_pj=0):
         self.alpha_pj = alpha_pj
         self.q_provide = q_provide
@@ -115,11 +117,20 @@ class Runner(object):
     def qtake_to_h5(self):
         temp_df = pd.DataFrame({'qt_take': self.q_take, 'lambda_t': self.lambda_t})
         temp_df.to_hdf(self.h5filename, 'qtl', append=True, format='table', complevel=5, complib='blosc')
+
+    def qtake_to_df(self):
+        return pd.DataFrame({'qt_take': self.q_take, 'lambda_t': self.lambda_t})
         
-    def mm_profitability_to_h5(self):
-        for m in self.marketmaker_array:
-            temp_df = pd.DataFrame(m.cash_flow_collector)
-            temp_df.to_hdf(self.h5filename, 'mmp', append=True, format='table', complevel=5, complib='blosc')
+    # def mm_profitability_to_h5(self):
+    #     for m in self.marketmaker_array:
+    #         temp_df = pd.DataFrame(m.cash_flow_collector)
+    #         temp_df.to_hdf(self.h5filename, 'mmp', append=True, format='table', complevel=5, complib='blosc')
+    
+    def mm_profitability_to_df(self):
+        if len(self.marketmaker_array) == 1:
+            return pd.DataFrame(self.marketmaker_array[0].cash_flow_collector)
+        else:
+            raise NotImplementedError     
         
     def make_setup(self, prime1):
         top_of_book = self.exchange.report_top_of_book(0)
@@ -166,9 +177,9 @@ class Runner(object):
                             trader = self.trader_dict[c['trader']]
                             trader.confirm_trade_local(c)
                         top_of_book = self.exchange.report_top_of_book(current_time)
-            if not np.remainder(current_time, 2000):
-                self.exchange.order_history_to_h5(self.h5filename)
-                self.exchange.sip_to_h5(self.h5filename)
+            # if not np.remainder(current_time, 2000):
+            #     self.exchange.order_history_to_h5(self.h5filename)
+            #     self.exchange.sip_to_h5(self.h5filename)
                 
     def run_mcsPJ(self, prime1):
         top_of_book = self.exchange.report_top_of_book(prime1)
@@ -220,58 +231,4 @@ class Runner(object):
             if not np.remainder(current_time, 2000):
                 self.exchange.order_history_to_h5(self.h5filename)
                 self.exchange.sip_to_h5(self.h5filename)
-    
-
-if __name__ == '__main__':
-    
-    start = time.time()
-    print(start) 
-    
-    random.seed(5)
-    np.random.seed(5)
-    
-#    num_mms=1
-#    mm_maxq=1
-#    mm_quotes=5
-#    mm_quote_range=20
-#    mm_delta=0.05
-#    num_takers=100
-#    taker_maxq=1
-#    num_providers=45
-#    provider_maxq=1
-#    q_provide=0.5
-#    alpha=0.0375
-#    mu=0.0005
-#    delta=0.025
-#    lambda0=100
-#    wn=0.001
-#    c_lambda=50.0
-#    run_steps=100000
-#    mpi=1
-#    h5filename='test.h5'  
-    h5_root = 'test_without_enum'
-    alpha_pj = 0.05
-    pj = False
-
-    h5dir = 'C:\\Users\\user\\Documents\\Agent-Based Models\\h5 files\\TempTests\\'
-    h5_file = '%s%s.h5' % (h5dir, h5_root)
-    
-    if pj:
-        market1 = Runner(alpha_pj=alpha_pj, h5filename=h5_file)
-    else:
-        market1 = Runner(h5filename=h5_file)
-        
-    market1.seed_orderbook()
-    market1.make_setup(20)
-    
-    if pj:
-        market1.run_mcsPJ(20)
-    else:
-        market1.run_mcs(20)
-        
-    market1.exchange.trade_book_to_h5(market1.h5filename)
-    market1.qtake_to_h5()
-    market1.mm_profitability_to_h5()
-    
-    print('Run 2: %.2f minutes' % ((time.time() - start)/60))
     

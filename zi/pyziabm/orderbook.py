@@ -214,25 +214,37 @@ class Orderbook(object):
                     break
         #self.last_time = order['timestamp'] 
         
-    def order_history_to_h5(self, filename):
-        '''Append order history to an h5 file, clear the order_history'''
+    # def order_history_to_h5(self, filename):
+    #     '''Append order history to an h5 file, clear the order_history'''
+    #     temp_df = pd.DataFrame(self.order_history)
+    #     temp_df.to_hdf(filename, 'orders', append=True, format='table', complevel=5, complib='blosc', 
+    #                    min_itemsize={'order_id': 12}) 
+    #     self.order_history.clear()
+    
+    def order_history_to_df(self):
         temp_df = pd.DataFrame(self.order_history)
-        temp_df.to_hdf(filename, 'orders', append=True, format='table', complevel=5, complib='blosc', 
-                       min_itemsize={'order_id': 12}) 
-        self.order_history.clear()
+        return temp_df
         
-    def trade_book_to_h5(self, filename):
-        '''Append trade_book to an h5 file, clear the trade_book'''
+    # def trade_book_to_h5(self, filename):
+    #     '''Append trade_book to an h5 file, clear the trade_book'''
+    #     temp_df = pd.DataFrame(self.trade_book)
+    #     temp_df.to_hdf(filename, 'trades', append=True, format='table', complevel=5, complib='blosc', 
+    #                    min_itemsize={'resting_order_id': 12, 'incoming_order_id': 12}) 
+    #     self.trade_book.clear()
+
+    def trade_book_to_df(self):
         temp_df = pd.DataFrame(self.trade_book)
-        temp_df.to_hdf(filename, 'trades', append=True, format='table', complevel=5, complib='blosc', 
-                       min_itemsize={'resting_order_id': 12, 'incoming_order_id': 12}) 
-        self.trade_book.clear()
+        return temp_df
         
-    def sip_to_h5(self, filename):
-        '''Append _sip_collector to an h5 file, clear the _sip_collector'''
+    # def sip_to_h5(self, filename):
+    #     '''Append _sip_collector to an h5 file, clear the _sip_collector'''
+    #     temp_df = pd.DataFrame(self._sip_collector)
+    #     temp_df.to_hdf(filename, 'tob', append=True, format='table', complevel=5, complib='blosc')
+    #     self._sip_collector.clear()
+    
+    def sip_to_df(self, filename):
         temp_df = pd.DataFrame(self._sip_collector)
-        temp_df.to_hdf(filename, 'tob', append=True, format='table', complevel=5, complib='blosc')
-        self._sip_collector.clear()
+        return temp_df
     
     def report_top_of_book(self, now_time):
         '''Update the top-of-book prices and sizes'''
