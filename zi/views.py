@@ -5,24 +5,10 @@ from .pyziabm_run import main
 
 from .serializers import InputSerializer
 from .models import Result
+
 # Create your views here.
 
-
-# class PyView(views.APIView):
-#     queryset = Result.objects.all()
-#     serializer_class = InputSerializer
-#     def get(self, request):
-#         return Response({'message':'please POST arbitrary data'})
-    
-#     def post(self, request):
-#         serializer = InputSerializer(data = request.data)
-
-#         if serializer.is_valid():
-#             serializer.save()
-#             df = main()
-#             return Response({'message':'success', 'params':serializer.validated_data, 'data': df})
-#         return Response({'message': 'error!'})
-
+# OLD class PyView(views.APIView)
 
 class PyView(viewsets.ModelViewSet):
     serializer_class = InputSerializer
