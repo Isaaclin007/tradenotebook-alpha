@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from .orderbook import Orderbook
-from .traders import Provider, Provider5, Taker, MarketMaker, MarketMaker5, PennyJumper
+from .traders import Provider, Provider5, Taker, MarketMaker, MarketMaker5
 
 random.seed(5)
 np.random.seed(5)
@@ -13,17 +13,14 @@ class Runner(object):
     def __init__(self, num_mms=1, mm_maxq=1, mm_quotes=12, mm_quote_range=60, mm_delta=0.025, 
                  num_takers=50, taker_maxq=1, num_providers=38, provider_maxq=1, q_provide=0.5,
                  alpha=0.0375, mu=0.001, delta=0.025, lambda0=100, wn=0.001, c_lambda=1.0, run_steps=500,
-                 mpi=5, h5filename='test.h5', alpha_pj=0):
-        self.alpha_pj = alpha_pj
+                 mpi=5):
         self.q_provide = q_provide
         self.lambda0 = lambda0
         self.run_steps = run_steps+1
         self.t_delta_t, self.taker_array = self.make_taker_array(taker_maxq, num_takers, mu)
         self.t_delta_p, self.provider_array = self.make_provider_array(provider_maxq, num_providers, delta, mpi, alpha)
         self.t_delta_m, self.marketmaker_array = self.make_marketmaker_array(mm_maxq, num_mms, mm_quotes, mm_quote_range, mm_delta, mpi)
-        self.pennyjumper = self.make_pennyjumper(mpi)
         self.exchange = Orderbook(15)
-        self.h5filename = h5filename
         self.q_take, self.lambda_t = self.make_q_take(wn, c_lambda)
         self.trader_dict = self.make_traders(num_takers, num_providers, num_mms)
         
@@ -76,17 +73,12 @@ class Runner(object):
             marketmakers = np.array([MarketMaker5(p,i,mpi,mm_delta,mm_quotes,mm_quote_range) for p,i in zip(marketmakers_list,provider_size)])
         return t_delta_m, marketmakers
         
-    def make_pennyjumper(self, mpi):
-        return PennyJumper('j0', 1, mpi)
-    
     def make_traders(self, num_takers, num_providers, num_mms):
         takers_dict = dict(zip(['t%i' % i for i in range(num_takers)], list(self.taker_array)))
         providers_dict = dict(zip(['p%i' % i for i in range(num_providers)], list(self.provider_array)))
         takers_dict.update(providers_dict)
         marketmakers_dict = dict(zip(['m%i' % i for i in range(num_mms)], list(self.marketmaker_array)))
         takers_dict.update(marketmakers_dict)
-        if self.alpha_pj > 0:
-            takers_dict.update({'j0': self.pennyjumper})
         return takers_dict
     
     def make_providers(self, step):
@@ -113,19 +105,10 @@ class Runner(object):
             qt_take[:,i] = qt_take[:,i-1] + (noise[:,i-1]>qt_take[:,i-1])*s - (noise[:,i-1]<qt_take[:,i-1])*s
         lambda_t = -self.lambda0*(1 + (np.abs(qt_take[1] - 0.5)/np.sqrt(np.mean(np.square(qt_take[0] - 0.5))))*c_lambda)
         return qt_take[1], lambda_t
-    
-    def qtake_to_h5(self):
-        temp_df = pd.DataFrame({'qt_take': self.q_take, 'lambda_t': self.lambda_t})
-        temp_df.to_hdf(self.h5filename, 'qtl', append=True, format='table', complevel=5, complib='blosc')
 
     def qtake_to_df(self):
         return pd.DataFrame({'qt_take': self.q_take, 'lambda_t': self.lambda_t})
-        
-    # def mm_profitability_to_h5(self):
-    #     for m in self.marketmaker_array:
-    #         temp_df = pd.DataFrame(m.cash_flow_collector)
-    #         temp_df.to_hdf(self.h5filename, 'mmp', append=True, format='table', complevel=5, complib='blosc')
-    
+
     def mm_profitability_to_df(self):
         if len(self.marketmaker_array) == 1:
             return pd.DataFrame(self.marketmaker_array[0].cash_flow_collector)
@@ -177,58 +160,3 @@ class Runner(object):
                             trader = self.trader_dict[c['trader']]
                             trader.confirm_trade_local(c)
                         top_of_book = self.exchange.report_top_of_book(current_time)
-            # if not np.remainder(current_time, 2000):
-            #     self.exchange.order_history_to_h5(self.h5filename)
-            #     self.exchange.sip_to_h5(self.h5filename)
-                
-    def run_mcsPJ(self, prime1):
-        top_of_book = self.exchange.report_top_of_book(prime1)
-        for current_time in range(prime1, self.run_steps):
-            for row in self.make_both(current_time):
-                if row[0].trader_type == 'Provider':
-                    if row[1]:
-                        row[0].process_signal(current_time, top_of_book, self.q_provide, self.lambda_t[current_time])
-                        self.exchange.process_order(row[0].quote_collector[-1])
-                        top_of_book = self.exchange.report_top_of_book(current_time)
-                    row[0].bulk_cancel(current_time)
-                    if row[0].cancel_collector: # <---- Check permission versus forgiveness here and elsewhere - move to methods?
-                        for c in row[0].cancel_collector:
-                            self.exchange.process_order(c)
-                            if self.exchange.confirm_modify_collector: # <---- Check permission versus forgiveness here and elsewhere - move to methods?
-                                row[0].confirm_cancel_local(self.exchange.confirm_modify_collector[0])
-                        top_of_book = self.exchange.report_top_of_book(current_time)
-                elif row[0].trader_type == 'MarketMaker':
-                    if row[1]:
-                        row[0].process_signal(current_time, top_of_book, self.q_provide)
-                        for q in row[0].quote_collector:
-                            self.exchange.process_order(q)
-                        top_of_book = self.exchange.report_top_of_book(current_time)
-#                    row[0].bulk_cancel(self.delta*2, current_time, self.q_take[current_time])
-                    row[0].bulk_cancel(current_time)
-                    if row[0].cancel_collector: # <---- Check permission versus forgiveness here and elsewhere - move to methods?
-                        for c in row[0].cancel_collector:
-                            self.exchange.process_order(c)
-                            if self.exchange.confirm_modify_collector: # <---- Check permission versus forgiveness here and elsewhere - move to methods?
-                                row[0].confirm_cancel_local(self.exchange.confirm_modify_collector[0])
-                        top_of_book = self.exchange.report_top_of_book(current_time)
-                else:
-                    row[0].process_signal(current_time, self.q_take[current_time])
-                    self.exchange.process_order(row[0].quote_collector[-1])
-                    if self.exchange.traded: # <---- Check permission versus forgiveness here and elsewhere - move to methods?
-                        for c in self.exchange.confirm_trade_collector:
-                            trader = self.trader_dict[c['trader']]
-                            trader.confirm_trade_local(c)
-                        top_of_book = self.exchange.report_top_of_book(current_time)
-                if random.uniform(0,1) < self.alpha_pj:
-                    self.pennyjumper.process_signal(current_time, top_of_book, self.q_take[current_time])
-                    if self.pennyjumper.cancel_collector:
-                        for c in self.pennyjumper.cancel_collector:
-                            self.exchange.process_order(c)
-                    if self.pennyjumper.quote_collector:
-                        for q in self.pennyjumper.quote_collector:
-                            self.exchange.process_order(q)
-                    top_of_book = self.exchange.report_top_of_book(current_time)
-            if not np.remainder(current_time, 2000):
-                self.exchange.order_history_to_h5(self.h5filename)
-                self.exchange.sip_to_h5(self.h5filename)
-    
