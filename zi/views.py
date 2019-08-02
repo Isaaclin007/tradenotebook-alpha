@@ -14,9 +14,9 @@ class PyView(viewsets.ModelViewSet):
     http_method_names = ['get', 'post']
 
     def create(self, request):
-        serializer = InputSerializer(data = request.data)
+        serializer = InputSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(ip_address=self.get_client_ip(request))
             df = main()
             return Response({'message':'success', 'params':serializer.validated_data, 'data': df})
         return Response({'message': 'error!'})
@@ -26,6 +26,14 @@ class PyView(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk):
         return Response({'message':'please POST arbitrary data'})
+
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
 
 class RandomView(views.APIView):
     def get(self, request):
