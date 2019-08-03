@@ -7,3 +7,5 @@ django-rest-auth
 django-cors-headers
 gunicorn
 django-heroku
+numpy
+pandas
