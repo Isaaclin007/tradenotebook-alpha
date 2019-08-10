@@ -1,5 +1,7 @@
 # tradenotebook-alpha
 
+Currently https://tradenotebook-alpha.herokuapp.com/ points to __develop__.
+
 Secrets in environment variable - `source .env` or add to config vars in production.
 
 The purpose of this app is to simulate actors in financial markets, deriving from the concept of a zero intelligence agent-based model on ETFs. The finished model should present an educational visualization of the effects of primary actors in financial markets.
