@@ -133,6 +133,13 @@ STATIC_URL = '/static/'
 CORS_ORIGIN_WHITELIST = []
 
 
+# Swagger deprecation of CoreAPI
+
+REST_FRAMEWORK = { 
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema' 
+    }
+
+
 # Heroku deploy
 
 django_heroku.settings(locals())
