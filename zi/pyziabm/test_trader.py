@@ -2,7 +2,7 @@ import random
 import numpy as np
 import unittest
 
-from traders import Provider, Provider5, Taker, NoiseTrader, MarketMaker, MarketMaker5, PennyJumper
+from .traders import Provider, Provider5, Taker, NoiseTrader, MarketMaker, MarketMaker5, PennyJumper
 
 
 class TestTrader(unittest.TestCase):
