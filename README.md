@@ -33,3 +33,8 @@ Need a way to set the starting and stop prices. Also no need for pennyjumpers?
 Need "Trader" instances to be very one-directional at times. Execute at a certain time...
 
 In order to simulate a trading day, from 9:30 AM (timestamp 1) to 4pm there are 6 and a half hours. That makes 390 minutes. That makes 23400 seconds. So you should parse out the "randomness" to group into certain periods according to a bell curve.
+
+
+### September 2019
+
+New todo: Add a bootstraped intro page and route that to the root.
